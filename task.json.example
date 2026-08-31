@@ -1,0 +1,15 @@
+{
+  "pluginParams": {
+    "imageFolder": "E:/图片",
+    "outputExcel": "E:/结果/1688结果.xlsx",
+    "topN": 3,
+    "maxImages": 1,
+    "headless": false,
+    "imageDelayMinSec": 3,
+    "imageDelayMaxSec": 8,
+    "batchSize": 20,
+    "batchCooldownMinSec": 300,
+    "batchCooldownMaxSec": 600
+  },
+  "exportPath": "D:/tmp/1688-export-demo/"
+}

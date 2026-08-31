@@ -1,0 +1,92 @@
+{
+  "name": "1688 图搜比价",
+  "version": "0.6.22",
+  "description": "读取本地图片文件夹，在 1688 以图搜图，按相似度锚定后比价，生成 Top3 店铺信息 Excel",
+  "script": "run.py",
+  "html": "index.html",
+  "contractVersion": 2,
+  "execution": {
+    "parallelizable": 0,
+    "preemptible": 0
+  },
+  "capabilities": {
+    "setup": {
+      "mode": "none",
+      "schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    "taskParams": {
+      "collectionMode": "html",
+      "schema": {
+        "type": "object",
+        "required": [
+          "imageFolder"
+        ],
+        "properties": {
+          "imageFolder": {
+            "type": "string",
+            "title": "图片文件夹路径"
+          },
+          "outputExcel": {
+            "type": "string",
+            "title": "结果Excel路径(文件或目录，可空=自动)",
+            "default": ""
+          },
+          "checkpointDb": {
+            "type": "string",
+            "title": "现有断点库路径(留空=新建)",
+            "default": ""
+          },
+          "topN": {
+            "type": "integer",
+            "title": "抓取最低价店铺数",
+            "default": 3
+          },
+          "maxImages": {
+            "type": "integer",
+            "title": "最多处理图片数(0=全部)",
+            "default": 0
+          }
+        }
+      },
+      "htmlBindings": [
+        {
+          "id": "imageFolder",
+          "label": "图片文件夹路径",
+          "type": "string",
+          "required": true
+        },
+        {
+          "id": "outputExcel",
+          "label": "结果Excel路径(文件或目录，可空=自动)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "id": "checkpointDb",
+          "label": "现有断点库路径(留空=新建)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "id": "topN",
+          "label": "抓取最低价店铺数",
+          "type": "integer",
+          "required": false,
+          "default": 3
+        },
+        {
+          "id": "maxImages",
+          "label": "最多处理图片数(0=全部)",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ]
+    }
+  }
+}

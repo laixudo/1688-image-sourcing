@@ -1,0 +1,57 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+task.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Node and local tooling
+node_modules/
+.package_tools/
+
+# Runtime data (may contain login sessions, cookies, logs, or user data)
+storage/*
+!storage/.gitkeep
+debug/
+
+# Build outputs and local backups
+dist/
+build/
+backups/
+*.zip
+
+# Local QA and one-off work files
+pdf_visual_qa/
+_invoice_patch/
+beau_rounding_check.png
+inspect_feedback.mjs
+.codex_patch_probe.txt
+
+# Generated office and database files
+*.xlsx
+*.xls
+*.csv
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.log
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini

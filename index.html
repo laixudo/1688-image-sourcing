@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>1688 图搜比价</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root, html[data-theme="light"] {
+      --bg: #f2f3f5;
+      --bg-elev: #ffffff;
+      --bg-soft: rgba(255, 255, 255, 0.72);
+      --bg-island: #1c1c1e;
+      --text: #1c1c1e;
+      --text-2: #636366;
+      --text-3: #8e8e93;
+      --text-on-dark: #f5f5f7;
+      --line: rgba(60, 60, 67, 0.12);
+      --line-2: rgba(60, 60, 67, 0.18);
+      --fill: rgba(120, 120, 128, 0.08);
+      --fill-2: rgba(120, 120, 128, 0.12);
+      --accent: #ff6a00;
+      --accent-soft: rgba(255, 106, 0, 0.12);
+      --ok: #34c759;
+      --bad: #ff3b30;
+      --shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+      --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.04);
+      --r-xl: 28px;
+      --r-lg: 22px;
+      --r-md: 16px;
+      --r-sm: 12px;
+      --font: "Manrope", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #000000;
+      --bg-elev: #1c1c1e;
+      --bg-soft: rgba(28, 28, 30, 0.82);
+      --bg-island: #2c2c2e;
+      --text: #f5f5f7;
+      --text-2: #a1a1a6;
+      --text-3: #6e6e73;
+      --text-on-dark: #f5f5f7;
+      --line: rgba(84, 84, 88, 0.45);
+      --line-2: rgba(84, 84, 88, 0.65);
+      --fill: rgba(120, 120, 128, 0.18);
+      --fill-2: rgba(120, 120, 128, 0.28);
+      --accent-soft: rgba(255, 106, 0, 0.18);
+      --shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+      --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(900px 420px at 50% -10%, rgba(255, 106, 0, 0.08), transparent 55%),
+        var(--bg);
+      -webkit-font-smoothing: antialiased;
+      padding: 20px 18px 40px;
+      transition: background .35s var(--ease), color .25s var(--ease);
+    }
+
+    button, input { font: inherit; }
+    button {
+      appearance: none;
+      border: none;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:disabled { cursor: not-allowed; opacity: 0.38; }
+
+    .app {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      animation: page-in .45s var(--ease) both;
+    }
+
+    @keyframes page-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes island-expand {
+      from { transform: scaleX(0.92); opacity: 0.85; }
+      to { transform: none; opacity: 1; }
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes toast-out {
+      to { opacity: 0; transform: translateY(-6px) scale(0.98); }
+    }
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    /* —— Status bar + Dynamic Island —— */
+    .statusbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding: 0 4px;
+      color: var(--text-3);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    .statusbar .left,
+    .statusbar .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 88px;
+    }
+    .statusbar .right { justify-content: flex-end; }
+
+    .island {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--bg-island);
+      color: var(--text-on-dark);
+      box-shadow: var(--shadow-soft);
+      transition: padding .35s var(--ease), min-width .35s var(--ease), background .25s var(--ease);
+      animation: island-expand .4s var(--ease) both;
+      max-width: min(420px, 70vw);
+    }
+    .island[data-state="busy"] {
+      padding-right: 16px;
+    }
+    .island .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #8e8e93;
+      flex-shrink: 0;
+    }
+    .island[data-state="on"] .dot { background: var(--ok); }
+    .island[data-state="off"] .dot { background: var(--bad); }
+    .island[data-state="busy"] .dot {
+      background: var(--accent);
+      animation: pulse-soft 1.2s ease infinite;
+    }
+    .island .title {
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .island .sub {
+      font-size: 11px;
+      color: rgba(245, 245, 247, 0.62);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--fill);
+      color: var(--text-2);
+      transition: transform .18s var(--ease), background .18s var(--ease), color .18s var(--ease);
+    }
+    .icon-btn:hover { background: var(--fill-2); color: var(--text); }
+    .icon-btn:active { transform: scale(0.94); }
+    .icon-btn svg { width: 16px; height: 16px; display: block; }
+
+    /* —— Brand —— */
+    .brand {
+      text-align: center;
+      margin: 8px 0 28px;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+    .brand h1 span { color: var(--accent); }
+    .brand p {
+      margin: 10px auto 0;
+      max-width: 28rem;
+      color: var(--text-2);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    /* —— Layout —— */
+    .grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .stack { display: grid; gap: 14px; }
+
+    .card {
+      background: var(--bg-elev);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-soft);
+      padding: 18px 18px 16px;
+      transition: transform .22s var(--ease), box-shadow .22s var(--ease), background .25s var(--ease), border-color .25s var(--ease);
+    }
+    .card:hover { box-shadow: var(--shadow); }
+
+    .run-state {
+      min-height: 126px;
+      display: grid;
+      gap: 12px;
+    }
+    .run-stage {
+      padding: 13px 14px;
+      border-radius: var(--r-md);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .run-file {
+      color: var(--text-2);
+      font-size: 12px;
+      word-break: break-all;
+    }
+    .run-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .run-stat {
+      padding: 9px 8px;
+      border-radius: var(--r-sm);
+      background: var(--fill);
+      text-align: center;
+    }
+    .run-stat b { display: block; font-size: 17px; }
+    .run-stat span { color: var(--text-3); font-size: 11px; }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .card-head h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+    .card-head .caption {
+      margin: 3px 0 0;
+      color: var(--text-3);
+      font-size: 12px;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 5px 9px;
+      border-radius: 999px;
+      letter-spacing: 0.02em;
+    }
+
+    /* list hierarchy */
+    .list {
+      display: grid;
+      gap: 2px;
+      background: var(--fill);
+      border-radius: var(--r-md);
+      padding: 4px;
+    }
+    .list-item {
+      background: var(--bg-elev);
+      border-radius: var(--r-sm);
+      padding: 12px 12px;
+    }
+    .list-item + .list-item { margin-top: 0; }
+    .list-item label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+    .list-item label em {
+      font-style: normal;
+      color: var(--accent);
+      margin-left: 4px;
+    }
+    .list-item label small {
+      float: right;
+      color: var(--text-3);
+      font-weight: 400;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      padding: 0;
+      transition: color .2s var(--ease);
+    }
+    input::placeholder { color: var(--text-3); }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .active-pacing {
+      color: var(--text-3);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    @media (max-width: 520px) {
+      .row-2 { grid-template-columns: 1fr; }
+    }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--r-sm);
+      background: var(--bg-elev);
+    }
+    .switch-row .copy {
+      min-width: 0;
+    }
+    .switch-row .copy strong {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    .switch-row .copy span {
+      display: block;
+      margin-top: 2px;
+      color: var(--text-3);
+      font-size: 12px;
+    }
+    .toggle {
+      position: relative;
+      width: 46px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .toggle i {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: #e5e5ea;
+      transition: background .22s var(--ease);
+    }
+    html[data-theme="dark"] .toggle i { background: #39393d; }
+    .toggle i::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,.18);
+      transition: transform .22s var(--ease);
+    }
+    .toggle input:checked + i { background: var(--ok); }
+    .toggle input:checked + i::after { transform: translateX(18px); }
+
+    /* control center */
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 520px) {
+      .control-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .ctl {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 88px;
+      padding: 14px 10px;
+      border-radius: var(--r-md);
+      background: var(--fill);
+      color: var(--text);
+      transition: transform .18s var(--ease), background .18s var(--ease), opacity .18s var(--ease);
+    }
+    .ctl:hover:not(:disabled) { background: var(--fill-2); }
+    .ctl:active:not(:disabled) { transform: scale(0.97); }
+    .ctl .glyph {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--bg-elev);
+      box-shadow: var(--shadow-soft);
+      color: var(--text);
+      transition: transform .18s var(--ease), background .18s var(--ease);
+    }
+    .ctl.primary .glyph {
+      background: linear-gradient(180deg, #ff8a33, var(--accent));
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(255, 106, 0, 0.28);
+    }
+    .ctl span {
+      font-size: 12px;
+      font-weight: 550;
+      color: var(--text-2);
+      text-align: center;
+    }
+    .ctl.primary span { color: var(--text); font-weight: 650; }
+    .ctl svg { width: 18px; height: 18px; }
+
+    .hint {
+      margin: 12px 2px 0;
+      color: var(--text-3);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+    .hint strong { color: var(--text-2); font-weight: 600; }
+
+    /* notification stack */
+    .notify-stack {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: grid;
+      gap: 8px;
+      width: min(420px, calc(100vw - 28px));
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: var(--bg-soft);
+      backdrop-filter: blur(18px) saturate(1.2);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      animation: toast-in .28s var(--ease) both;
+    }
+    .toast.out { animation: toast-out .22s var(--ease) both; }
+    .toast .glyph {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--fill-2);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .toast .glyph.ok { color: var(--ok); }
+    .toast .glyph.bad { color: var(--bad); }
+    .toast .msg {
+      min-width: 0;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--text);
+    }
+
+    /* lightweight widget / log */
+    .widget {
+      overflow: hidden;
+    }
+    .widget-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding: 0 2px;
+      color: var(--text-3);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    #logs {
+      margin: 0;
+      max-height: 220px;
+      min-height: 120px;
+      overflow: auto;
+      padding: 12px 12px;
+      border-radius: var(--r-md);
+      background: var(--fill);
+      color: var(--text-2);
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    .ok { color: var(--ok); }
+    .bad { color: var(--bad); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="notify-stack" id="toasts" aria-live="polite"></div>
+
+  <div class="app">
+    <div class="statusbar">
+      <div class="left">1688 Workbench</div>
+      <div
+        class="island"
+        id="island"
+        data-state=""
+        title="服务状态"
+      >
+        <span class="dot"></span>
+        <span class="title" id="islandTitle">检测中</span>
+        <span class="sub" id="islandSub">health</span>
+      </div>
+      <div class="right">
+        <button class="icon-btn" id="btnTheme" type="button" aria-label="切换主题" title="深浅主题">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+            <circle cx="12" cy="12" r="4" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <header class="brand">
+      <h1>1688 <span>图搜比价</span></h1>
+      <p>本地图片入库，结果页锚定同款，导出最低价 Top3。克制、有序、可交付。</p>
+    </header>
+
+    <div class="grid">
+      <div class="stack" id="params">
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <h2>任务配置</h2>
+              <p class="caption">SDK 采参 · 无需先启动服务</p>
+            </div>
+            <div class="badge">Config</div>
+          </div>
+
+          <div class="list">
+            <div class="list-item">
+              <label>图片文件夹路径<em>*</em></label>
+              <input data-settings-id="imageFolder" data-settings-value="" type="text"
+                     placeholder="例如 E:\图片" />
+            </div>
+            <div class="list-item">
+              <label>结果 Excel 路径<small>可空</small></label>
+              <input data-settings-id="outputExcel" data-settings-value="" type="text"
+                     placeholder="文件或目录，留空自动生成" />
+            </div>
+            <div class="list-item">
+              <label>断点库路径<small>可空</small></label>
+              <input data-settings-id="checkpointDb" data-settings-value="" type="text"
+                     placeholder="填现有 .sqlite3 续跑；留空则新建" />
+              <p class="caption">填写时严格按该断点库续跑；留空时会按“图片路径＋时间＋最多处理图片数”创建新的中文文件名。</p>
+            </div>
+            <div class="list-item">
+              <div class="row-2">
+                <div>
+                  <label>最低价店铺数</label>
+                  <input data-settings-id="topN" data-settings-value="3" type="number" value="3" min="1" max="3" />
+                </div>
+                <div>
+                  <label>最多处理图片<small>0=全部</small></label>
+                  <input data-settings-id="maxImages" data-settings-value="0" type="number" value="0" min="0" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card widget">
+          <div class="widget-bar">
+            <span>运行日志</span>
+            <span>轻量组件</span>
+          </div>
+          <pre id="logs"></pre>
+        </section>
+      </div>
+
+      <div class="stack" id="console">
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <h2>控制中心</h2>
+              <p class="caption">模块化操作 · 触控反馈</p>
+            </div>
+            <div class="badge">Control</div>
+          </div>
+
+          <div class="control-grid">
+            <button class="ctl" id="btnLogin" type="button" disabled>
+              <div class="glyph">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-6"/></svg>
+              </div>
+              <span>打开登录</span>
+            </button>
+            <button class="ctl" id="btnLoginCheck" type="button" disabled>
+              <div class="glyph">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <span>检查登录</span>
+            </button>
+            <button class="ctl" id="btnConfirmLoginVisible" type="button">
+              <div class="glyph">✓</div>
+              <span>我看到登录页面</span>
+            </button>
+            <button class="ctl" id="btnPreview" type="button" disabled>
+              <div class="glyph">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h5l2 2h11v10H3z"/></svg>
+              </div>
+              <span>预览文件夹</span>
+            </button>
+            <button class="ctl primary" id="btnRun" type="button" disabled>
+              <div class="glyph">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <span>开始处理</span>
+            </button>
+            <button class="ctl" id="btnStop" type="button" disabled>
+              <div class="glyph">
+                <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+              </div>
+              <span>停止</span>
+            </button>
+            <button class="ctl" id="btnResume" type="button" disabled>
+              <div class="glyph">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12a7 7 0 1 0 2-5"/><path d="M5 4v5h5"/></svg>
+              </div>
+              <span>人工处理后继续</span>
+            </button>
+            <button class="ctl" id="btnShutdownBrowser" type="button" disabled>
+              <div class="glyph">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v9"/><path d="M7 7a7 7 0 1 0 10 0"/></svg>
+              </div>
+              <span>关闭浏览器</span>
+            </button>
+          </div>
+
+          <p class="hint">
+            <strong>安全秩序：</strong>登录 → 填目录 → 预览 → 开始。若出现验证，先在可见浏览器中手动处理，再点“人工处理后继续”；工具不会自动处理验证。
+          </p>
+        </section>
+
+        <section class="card widget">
+          <div class="widget-bar">
+            <span>当前处理进度</span>
+            <span id="runtimeFlag">空闲</span>
+          </div>
+          <div class="run-state" aria-live="polite">
+            <div class="run-stage" id="runtimeStage">等待任务开始</div>
+            <div class="run-file" id="runtimeFile">尚未选择图片</div>
+            <div class="active-pacing" id="runtimePacing">当前生效节奏：尚未开始任务</div>
+            <div class="active-pacing" id="runtimeRecovery">恢复统计：尚无异常</div>
+            <div class="run-stats">
+              <div class="run-stat"><b id="runtimeDone">0</b><span>已处理</span></div>
+              <div class="run-stat"><b id="runtimeSuccess">0</b><span>成功</span></div>
+              <div class="run-stat"><b id="runtimeFailed">0</b><span>失败</span></div>
+              <div class="run-stat"><b id="runtimeNetwork">0</b><span>今日实际请求</span></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- hidden status target kept for script compatibility via island -->
+  <div id="status" hidden></div>
+
+  <script>
+    (function initTheme() {
+      var saved = localStorage.getItem("ao1688-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+
+    document.getElementById("btnTheme").addEventListener("click", function () {
+      var cur = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      var next = cur === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("ao1688-theme", next);
+      pushToast("已切换至" + (next === "dark" ? "深色" : "浅色") + "主题", "ok");
+    });
+
+    var checkpointStorageKey = "ao1688-checkpoint-v1";
+
+    (function restoreCheckpoint() {
+      try {
+        var value = localStorage.getItem(checkpointStorageKey) || "";
+        var el = document.querySelector('[data-settings-id="checkpointDb"]');
+        el.value = value;
+        el.setAttribute("data-settings-value", value);
+      } catch (e) {}
+    })();
+
+    function syncCheckbox(el) {
+      el.setAttribute("data-settings-value", el.checked ? "true" : "false");
+    }
+    document.querySelectorAll('input[type="checkbox"][data-settings-id]').forEach(function (el) {
+      syncCheckbox(el);
+      el.addEventListener("change", function () { syncCheckbox(el); });
+    });
+    document.querySelectorAll('input:not([type="checkbox"])[data-settings-id]').forEach(function (el) {
+      var sync = function () {
+        el.setAttribute("data-settings-value", el.value);
+      };
+      sync();
+      el.addEventListener("input", sync);
+      el.addEventListener("change", sync);
+    });
+    document.querySelector('[data-settings-id="checkpointDb"]').addEventListener("change", function (event) {
+      localStorage.setItem(checkpointStorageKey, event.target.value.trim());
+    });
+
+    function pushToast(msg, kind) {
+      var stack = document.getElementById("toasts");
+      var el = document.createElement("div");
+      el.className = "toast";
+      el.innerHTML =
+        '<div class="glyph ' + (kind || "") + '">' +
+          (kind === "bad" ? "!" : "i") +
+        "</div><div class=\"msg\"></div>";
+      el.querySelector(".msg").textContent = msg;
+      stack.prepend(el);
+      setTimeout(function () {
+        el.classList.add("out");
+        setTimeout(function () { el.remove(); }, 220);
+      }, 2800);
+    }
+
+    function log(msg) {
+      var el = document.getElementById("logs");
+      var ts = new Date().toLocaleTimeString();
+      el.textContent = "[" + ts + "] " + msg + "\n" + el.textContent;
+      if (window.aoLogLine) {
+        try { window.aoLogLine("info", msg); } catch (e) {}
+      }
+    }
+
+    var uiActionBusy = false;
+    var refreshInFlight = false;
+
+    function sleep(ms) {
+      return new Promise(function (resolve) { setTimeout(resolve, ms); });
+    }
+
+    function setBusy(busy) {
+      uiActionBusy = !!busy;
+      ["btnLogin", "btnLoginCheck", "btnPreview", "btnRun", "btnShutdownBrowser"].forEach(function (id) {
+        var b = document.getElementById(id);
+        if (b._serviceOk) b.disabled = busy;
+      });
+      document.getElementById("btnStop").disabled = !busy && !document.getElementById("btnStop")._forceEnable;
+      if (busy) {
+        setIsland("busy", "处理中", "正在执行操作");
+      }
+    }
+
+    async function beginUiAction() {
+      // AgentOffice serializes plugin-command requests.  Stop new polling and
+      // wait for a health/status request that already crossed the boundary so
+      // the user's action cannot lose the host-side single-request race.
+      setBusy(true);
+      var deadline = Date.now() + 8000;
+      while (refreshInFlight && Date.now() < deadline) {
+        await sleep(50);
+      }
+    }
+
+    function collectParams() {
+      return {
+        imageFolder: document.querySelector('[data-settings-id="imageFolder"]').value.trim(),
+        outputExcel: document.querySelector('[data-settings-id="outputExcel"]').value.trim(),
+        checkpointDb: document.querySelector('[data-settings-id="checkpointDb"]').value.trim(),
+        topN: parseInt(document.querySelector('[data-settings-id="topN"]').value || "3", 10),
+        maxImages: parseInt(document.querySelector('[data-settings-id="maxImages"]').value || "0", 10),
+        headless: false,
+        imageDelayMinSec: 2,
+        imageDelayMaxSec: 4,
+        batchSize: 50,
+        batchCooldownMinSec: 45,
+        batchCooldownMaxSec: 75,
+        longBreakEvery: 500,
+        longBreakMinSec: 120,
+        longBreakMaxSec: 180,
+        dailyNetworkLimit: 0
+      };
+    }
+
+    function describePacing(p) {
+      if (!p || !Object.keys(p).length) return "当前生效节奏：尚未开始任务";
+      return "当前生效：每张 " + p.imageDelayMinSec + "–" + p.imageDelayMaxSec +
+        " 秒；每 " + p.batchSize + " 张休息 " + p.batchCooldownMinSec + "–" +
+        p.batchCooldownMaxSec + " 秒；每 " + p.longBreakEvery + " 张长休 " +
+        p.longBreakMinSec + "–" + p.longBreakMaxSec + " 秒；每日不限量";
+    }
+
+    function isLocalPreview() {
+      return !window.PLUGIN_ID;
+    }
+
+    function apiUrl(path) {
+      if (isLocalPreview()) return path;
+      return "/api/v1/robots/plugin-command/" + window.PLUGIN_ID + path;
+    }
+
+    function parseJsonValue(value) {
+      if (typeof value !== "string") return value;
+      var trimmed = value.trim();
+      if (!trimmed || (trimmed[0] !== "{" && trimmed[0] !== "[")) return value;
+      try { return JSON.parse(trimmed); } catch (e) { return value; }
+    }
+
+    function looksLikePluginPayload(value) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+      return ["summary", "progress", "evidence", "logged_in", "browser_ready", "checkpointDb", "pacing"]
+        .some(function (key) { return Object.prototype.hasOwnProperty.call(value, key); });
+    }
+
+    function unwrapApiPayload(value) {
+      var current = parseJsonValue(value);
+      for (var depth = 0; depth < 5; depth += 1) {
+        if (!current || typeof current !== "object" || Array.isArray(current)) break;
+        var next;
+        ["data", "result", "payload", "response", "body"].some(function (key) {
+          if (!Object.prototype.hasOwnProperty.call(current, key) || current[key] == null) return false;
+          var candidate = parseJsonValue(current[key]);
+          if (looksLikePluginPayload(candidate) || !looksLikePluginPayload(current)) {
+            next = candidate;
+            return true;
+          }
+          return false;
+        });
+        if (next === undefined || next === current) break;
+        current = next;
+      }
+      return current;
+    }
+
+    function apiErrorMessage(data, fallback) {
+      if (data && typeof data === "object") {
+        var detail = data.error || data.message || data.msg || data.detail;
+        if (Array.isArray(detail)) detail = JSON.stringify(detail);
+        if (detail && typeof detail === "object") detail = JSON.stringify(detail);
+        if (detail) return String(detail);
+        if (data.raw) return String(data.raw).slice(0, 500);
+        var keys = Object.keys(data);
+        if (keys.length) return (fallback || "接口返回异常") + "；返回字段=" + keys.join(",");
+      }
+      if (typeof data === "string" && data.trim()) return data.trim().slice(0, 500);
+      return fallback || "接口未返回错误详情";
+    }
+
+    async function api(path, options) {
+      var r = await fetch(apiUrl(path), options || {});
+      var text = await r.text();
+      var parsed;
+      try { parsed = JSON.parse(text); } catch (e) { parsed = { raw: text }; }
+      var data = unwrapApiPayload(parsed);
+      if (!r.ok) {
+        throw new Error(path + " · HTTP " + r.status + " · " + apiErrorMessage(data, "请求失败"));
+      }
+      return data;
+    }
+
+    async function apiWithHostBusyRetry(path, options, attempts) {
+      var tries = Math.max(1, attempts || 1);
+      var data;
+      for (var i = 0; i < tries; i += 1) {
+        data = await api(path, options);
+        if (data && data.ok === true) return data;
+        var message = apiErrorMessage(data, "");
+        if (message.indexOf("插件正在处理请求") < 0 || i === tries - 1) return data;
+        await sleep(300 + i * 350);
+      }
+      return data;
+    }
+
+    function setIsland(state, title, sub) {
+      var island = document.getElementById("island");
+      var nextState = state || "";
+      var nextTitle = title || "";
+      var nextSub = sub || "";
+      var titleEl = document.getElementById("islandTitle");
+      var subEl = document.getElementById("islandSub");
+      if (island.getAttribute("data-state") !== nextState) island.setAttribute("data-state", nextState);
+      if (titleEl.textContent !== nextTitle) titleEl.textContent = nextTitle;
+      if (subEl.textContent !== nextSub) subEl.textContent = nextSub;
+      // keep hidden #status for any external probes
+      var status = document.getElementById("status");
+      var statusText = nextTitle + (nextSub ? (" · " + nextSub) : "");
+      if (status && status.textContent !== statusText) status.textContent = statusText;
+    }
+
+    var lastProgressMessage = "";
+    var seenTechnicalEvents = {};
+
+    function renderProgress(p) {
+      document.getElementById("runtimeFlag").textContent = p.paused ? "等待人工" : (p.running ? "运行中" : "空闲");
+      document.getElementById("runtimeStage").textContent = p.message || "等待任务开始";
+      document.getElementById("runtimeFile").textContent = p.current_sku ? ("当前图片：" + p.current_sku + "（第 " + (p.current_row || 0) + " / " + (p.total || 0) + " 张）") : (p.total ? ("任务总数：" + p.total + " 张") : "尚未选择图片");
+      document.getElementById("runtimeDone").textContent = p.processed || 0;
+      document.getElementById("runtimeSuccess").textContent = p.success || 0;
+      document.getElementById("runtimeFailed").textContent = p.failed || 0;
+      document.getElementById("runtimeNetwork").textContent = p.daily_network_requests || 0;
+      document.getElementById("runtimePacing").textContent = describePacing(p.active_pacing);
+      var m = p.recovery_metrics || {};
+      document.getElementById("runtimeRecovery").textContent = [
+        "恢复统计",
+        "元数据复用 " + (m.metadata_reuse_attempts || 0),
+        "复用失效 " + (m.metadata_reuse_failures || 0),
+        "降级重传 " + (m.fallback_reuploads || 0),
+        "页面刷新 " + (m.global_page_refreshes || 0),
+        "熔断 " + (m.global_refresh_circuit_open || 0),
+        "探测网络异常 " + (m.auth_probe_network_error || 0),
+        "探测响应异常 " + (m.auth_probe_unexpected_response || 0)
+      ].join(" · ");
+    }
+
+    async function refresh() {
+      if (refreshInFlight || uiActionBusy) return;
+      refreshInFlight = true;
+      var buttons = ["btnLogin", "btnLoginCheck", "btnConfirmLoginVisible", "btnPreview", "btnRun", "btnStop", "btnResume"];
+      try {
+        var r = await fetch(apiUrl("/health"));
+        var ok = r.ok;
+        var modeHint = isLocalPreview() ? "本地" : "平台";
+        ["btnLogin", "btnLoginCheck", "btnPreview", "btnRun", "btnShutdownBrowser"].forEach(function (bid) {
+          var btn = document.getElementById(bid);
+          btn._serviceOk = ok;
+          btn.disabled = !ok || uiActionBusy;
+        });
+        document.getElementById("btnStop").disabled = !ok;
+        var islandState = ok ? "on" : "off";
+        var islandTitle = ok ? "在线" : "离线";
+        var islandSub = modeHint;
+        if (ok) {
+          try {
+            var st = await api("/status");
+            var confirmLoginButton = document.getElementById("btnConfirmLoginVisible");
+            if (st.login_window_confirmed) {
+              confirmLoginButton.disabled = true;
+            } else {
+              // Keep the user action available whenever the service is online.
+              // /confirm-login-visible remains the authority and rejects the
+              // click unless valid screenshot/CDP evidence exists.
+              confirmLoginButton.disabled = false;
+            }
+            if (st.progress) {
+              var p = st.progress;
+              renderProgress(p);
+              var busy = !!p.running;
+              var sub = [
+                p.paused ? "等待人工处理" : (busy ? "运行中" : "空闲"),
+                "成功 " + (p.success || 0),
+                p.total ? ("总计 " + p.total) : "",
+                p.resumed ? ("续跑 " + p.resumed) : "",
+                p.daily_network_requests ? ("今日新请求 " + p.daily_network_requests) : "",
+                "逐文件独立上传",
+                p.cooldown_remaining_sec ? ("冷却 " + p.cooldown_remaining_sec + " 秒") : "",
+                p.message || "",
+                p.current_sku || ""
+              ].filter(Boolean).join(" · ");
+              islandState = busy ? "busy" : "on";
+              islandTitle = p.paused ? "等待人工处理" : (busy ? "处理中" : "在线");
+              islandSub = sub;
+              if (p.message && p.message !== lastProgressMessage) {
+                lastProgressMessage = p.message;
+                log("进度：" + p.message);
+              }
+              (p.technical_events || []).forEach(function (event) {
+                var key = event.at + "|" + event.step;
+                if (seenTechnicalEvents[key]) return;
+                seenTechnicalEvents[key] = true;
+                var detail = Object.assign({}, event);
+                delete detail.at;
+                delete detail.step;
+                log("技术证据：" + event.step + " " + JSON.stringify(detail));
+              });
+              document.getElementById("btnResume").disabled = !p.paused;
+            }
+          } catch (e) {
+            islandSub = modeHint + " · 状态读取失败";
+          }
+        }
+        if (!uiActionBusy) setIsland(islandState, islandTitle, islandSub);
+      } catch (e) {
+        if (!uiActionBusy) setIsland("off", "离线", "未连接");
+        buttons.forEach(function (b) { document.getElementById(b).disabled = true; });
+        var shutdown = document.getElementById("btnShutdownBrowser");
+        if (shutdown) shutdown.disabled = true;
+      } finally {
+        refreshInFlight = false;
+      }
+    }
+
+    document.getElementById("btnLogin").addEventListener("click", async function () {
+      try {
+        await beginUiAction();
+        var data = await api("/login", { method: "POST" });
+        if (!data.ok) throw new Error((data.evidence && data.evidence.error) || data.message || "未确认登录窗口可见");
+        var e = data.evidence || {};
+        document.getElementById("btnConfirmLoginVisible").disabled = false;
+        log((data.message || "登录窗口自动检查通过") + " 截图=" + (e.screenshot_path || "-") + " 状态=" + (e.window_state || "-") + " 尺寸=" + (e.width || 0) + "x" + (e.height || 0));
+        pushToast("请核对截图后点击“我看到登录页面”", "ok");
+      } catch (e) {
+        log("登录失败: " + e.message);
+        pushToast("登录失败: " + e.message, "bad");
+      } finally {
+        setBusy(false);
+        refresh();
+      }
+    });
+
+    document.getElementById("btnLoginCheck").addEventListener("click", async function () {
+      try {
+        await beginUiAction();
+        var data = await api("/login-check");
+        var e = data.evidence || {};
+        var proof = "HTTP " + (e.http_status || "-") + " · " + (e.elapsed_ms || 0) + "ms";
+        var msg = data.logged_in
+          ? ("登录已确认：" + e.account_name + "（" + proof + "）")
+          : ("登录未确认：" + (e.reason || "未取得账户信息") + "（" + proof + "）");
+        log(msg);
+        pushToast(msg, data.logged_in ? "ok" : "bad");
+      } catch (e) {
+        log("检查失败: " + e.message);
+        pushToast("检查失败: " + e.message, "bad");
+      } finally {
+        setBusy(false);
+        refresh();
+      }
+    });
+
+    document.getElementById("btnPreview").addEventListener("click", async function () {
+      try {
+        var p = collectParams();
+        if (!p.imageFolder) { log("请先填写图片文件夹路径"); pushToast("请先填写图片文件夹路径", "bad"); return; }
+        await beginUiAction();
+        var data = await apiWithHostBusyRetry("/preview-folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageFolder: p.imageFolder })
+        }, 4);
+        if (!data || data.ok !== true) {
+          throw new Error("/preview-folder · HTTP 200 · " + apiErrorMessage(data, "宿主未返回插件原始响应"));
+        }
+        var s = data.summary || {};
+        var msg = "文件夹图片数=" + s.total;
+        log(msg + " 示例=" + ((s.files || []).slice(0, 5).join(", ") || "(无)"));
+        pushToast(msg, "ok");
+      } catch (e) {
+        log("预览失败: " + e.message);
+        pushToast("预览失败: " + e.message, "bad");
+      } finally {
+        setBusy(false);
+        refresh();
+      }
+    });
+
+    document.getElementById("btnRun").addEventListener("click", async function () {
+      try {
+        var p = collectParams();
+        if (!p.imageFolder) { log("请先填写图片文件夹路径"); pushToast("请先填写图片文件夹路径", "bad"); return; }
+        await beginUiAction();
+        var data = await api("/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(p)
+        });
+        if (!data.ok) throw new Error(data.error || data.message || "后台拒绝启动任务");
+        if (data.checkpointDb) {
+          var checkpointInput = document.querySelector('[data-settings-id="checkpointDb"]');
+          checkpointInput.value = data.checkpointDb;
+          checkpointInput.setAttribute("data-settings-value", data.checkpointDb);
+          localStorage.setItem(checkpointStorageKey, data.checkpointDb);
+          log("本次断点库：" + data.checkpointDb);
+        }
+        log(data.message || "已开始");
+        if (data.pacing) log("本次实际生效节奏：" + describePacing(data.pacing).replace("当前生效：", ""));
+        pushToast(data.message || "已开始处理", "ok");
+      } catch (e) {
+        log("启动失败: " + e.message);
+        pushToast("启动失败: " + e.message, "bad");
+      } finally {
+        setBusy(false);
+        refresh();
+      }
+    });
+
+    document.getElementById("btnStop").addEventListener("click", async function () {
+      try {
+        await beginUiAction();
+        var data = await api("/stop", { method: "POST" });
+        log(data.message || "已请求停止");
+        pushToast(data.message || "已请求停止", "ok");
+      } catch (e) {
+        log("停止失败: " + e.message);
+        pushToast("停止失败: " + e.message, "bad");
+      } finally {
+        setBusy(false);
+        refresh();
+      }
+    });
+
+    document.getElementById("btnConfirmLoginVisible").addEventListener("click", async function () {
+      try {
+        await beginUiAction();
+        var data = await api("/confirm-login-visible", { method: "POST" });
+        if (!data.ok) throw new Error(data.error || "可见性确认失败");
+        document.getElementById("btnConfirmLoginVisible").disabled = true;
+        log(data.message || "已记录用户确认");
+        pushToast(data.message || "已记录用户确认", "ok");
+      } catch (e) {
+        log("确认失败: " + e.message);
+        pushToast("确认失败: " + e.message, "bad");
+      } finally {
+        setBusy(false);
+        refresh();
+      }
+    });
+
+    document.getElementById("btnResume").addEventListener("click", async function () {
+      try {
+        await beginUiAction();
+        var data = await api("/resume", { method: "POST" });
+        log(data.message || "已继续");
+        pushToast(data.message || "已继续", "ok");
+      } catch (e) {
+        log("继续失败: " + e.message);
+        pushToast("继续失败: " + e.message, "bad");
+      } finally {
+        setBusy(false);
+        refresh();
+      }
+    });
+
+    document.getElementById("btnShutdownBrowser").addEventListener("click", async function () {
+      try {
+        await beginUiAction();
+        var data = await api("/shutdown-browser", { method: "POST" });
+        log(data.message || "浏览器已关闭，可重新打开登录");
+        pushToast(data.message || "浏览器已关闭", "ok");
+      } catch (e) {
+        log("关闭浏览器失败: " + e.message);
+        pushToast("关闭浏览器失败: " + e.message, "bad");
+      } finally {
+        setBusy(false);
+        refresh();
+      }
+    });
+
+    refresh();
+    setInterval(refresh, 1500);
+  </script>
+</body>
+</html>
